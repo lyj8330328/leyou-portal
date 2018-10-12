@@ -757,14 +757,41 @@
 </div>
 
 <script type="text/javascript">
-    var vm = new Vue({
+    const vm = new Vue({
         el: "#searchApp",
         data: {
+            key:"",  //搜索页面的关键字
+            search:{},
         },
 
         components:{
             lyTop: () => import("./js/pages/top.js")
-        }
+        },
+        method:{
+            loadData:function(){
+                const that = this;
+                ly.http.post("/search/page",that.search).then(function (resp) {
+                    console.log(resp);
+                });
+            }
+        },
+        created:function(){
+
+            //1.判断是否有请求参数
+            if(!location.search){
+                return;
+            }
+            //2.将请求参数转为对象
+            const search = ly.parse(location.search.substring(1));
+            //3.记录在data的search对象中
+            this.search = search;
+            //4.发起请求，根据条件搜索
+            //this.$options.method.loadData();
+            //this.loadData();
+            ly.http.post("/search/page",this.search).then(function (resp) {
+                console.log(resp);
+            });
+        },
     });
 </script>
 <!-- 底部栏位 -->

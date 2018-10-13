@@ -547,6 +547,14 @@ const ly = leyou = {
         }
     },
     /**
+     * 字符串截取
+     * @param val
+     * @returns {string}
+     */
+    formatStr(val){
+        return val.substr(0,15);
+    },
+    /**
      * 将整数价格变为小数
      * @param val
      * @returns {*}

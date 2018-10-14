@@ -132,28 +132,27 @@
                 </div>
                 <div class="fl ext"></div>
             </div>
-            <div class="type-wrap logo">
-                <div class="fl key brand">品牌</div>
+            <div class="type-wrap" v-for="(f,i) in filters" :key="i" v-if="f.k !== '品牌'">
+                <div class="fl key">{{f.k}}</div>
+                <div class="fl value">
+                    <ul class="type-list">
+                        <li v-for="(option,j) in f.options" :key="j">
+                            <a>{{option.name}}</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="fl ext"></div>
+            </div>
+            <div class="type-wrap logo"  v-else>
+                <div class="fl key brand">{{f.k}}</div>
                 <div class="value logos">
                     <ul class="logo-list">
-                        <li><img src="img/_/phone01.png" /></li>
-                        <li><img src="img/_/phone02.png" /></li>
-                        <li><img src="img/_/phone03.png" /></li>
-                        <li><img src="img/_/phone04.png" /></li>
-                        <li><img src="img/_/phone05.png" /></li>
-                        <li><img src="img/_/phone06.png" /></li>
-                        <li><img src="img/_/phone07.png" /></li>
-                        <li><img src="img/_/phone08.png" /></li>
-                        <li><img src="img/_/phone09.png" /></li>
-                        <li><img src="img/_/phone10.png" /></li>
-                        <li><img src="img/_/phone11.png" /></li>
-                        <li><img src="img/_/phone12.png" /></li>
-                        <li><img src="img/_/phone13.png" /></li>
-                        <li><img src="img/_/phone14.png" /></li>
-                        <li><img src="img/_/phone05.png" /></li>
-                        <li><img src="img/_/phone06.png" /></li>
-                        <li><img src="img/_/phone07.png" /></li>
-                        <li style="text-align: center"><a style="line-height: 30px; font-size: 12px" href="#">黑马</a></li>
+                        <li v-for="(option,j) in f.options" v-if="option.image">
+                            <img :src="option.image" />
+                        </li>
+                        <li style="text-align: center" v-else>
+                            <a style="line-height: 30px;font-size: 12px" href="#">{{option.name}}</a>
+                        </li>
                     </ul>
                 </div>
                 <div class="fl ext">
@@ -470,7 +469,8 @@
             },
             goodsList:[], //接收搜索到的结果
             total: 0, //总条数
-            totalPage: 0,//总页数。
+            totalPage: 0,//总页数
+            filters:[] // 过滤参数集合
         },
 
         components:{
@@ -492,6 +492,7 @@
         methods:{
             loadData(){
                 ly.http.post("/search/page",this.search).then((resp) => {
+                    console.log(resp)
                     resp.data.items.forEach(goods => {
                         let max = 0;
                         let min = 0;
@@ -532,6 +533,16 @@
                     this.goodsList = resp.data.items;
                     this.total = resp.data.total;
                     this.totalPage = resp.data.totalPage;
+                    //初始化分类过滤
+                    this.filters.push({
+                        k:"分类",
+                        options:resp.data.categories
+                    });
+                    //初始化品牌过滤
+                    this.filters.push({
+                        k:"品牌",
+                        options:resp.data.brands
+                    });
                 });
             },
             navPage(){

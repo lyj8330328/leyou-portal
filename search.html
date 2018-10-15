@@ -100,17 +100,16 @@
             <!--面包屑-->
             <ul class="fl sui-breadcrumb">
                 <li><span>全部结果:</span></li>
-                <li ><a href="#">手机</a></li>
-                <li ><span>手机通讯</span></li>
+                <li v-for="(c,i) in breads" :key="i">
+                    <a href="#" v-if="i < 2">{{c.name}}</a>
+                    <span v-else>{{c.name}}</span>
+                </li>
             </ul>
             <!--已选择过滤项-->
             <ul class="tags-choose">
-                <li class="tag">
-                    品牌:<span style="color: red">apple</span>
-                    <i class="sui-icon icon-tb-close"></i>
-                </li>
-                <li class="tag">
-                    内存:<span style="color: red">4G</span>
+                <li class="tag" v-for="(v,k) in search.filter" v-if="k !== 'cid3'" :key="k">
+                    {{k === 'brandId' ? '品牌' : k}}:<span style="color:red;">{{getFilterValue(k,v)}}</span>
+                    <span></span>
                     <i class="sui-icon icon-tb-close"></i>
                 </li>
             </ul>
@@ -118,26 +117,13 @@
         </div>
         <!--selector-->
         <div class="clearfix selector">
-            <div class="type-wrap">
-                <div class="fl key">分类</div>
-                <div class="fl value">
-                    <ul class="type-list">
-                        <li>
-                            <a>手机</a>
-                        </li>
-                        <li>
-                            <a>儿童手表</a>
-                        </li>
-                    </ul>
-                </div>
-                <div class="fl ext"></div>
-            </div>
-            <div class="type-wrap" v-for="(f,i) in filters" :key="i" v-if="f.k !== '品牌'">
+            <div class="type-wrap" v-for="(f,i) in remainFilters" :key="i" v-if="f.k !== '品牌'" v-show="i < 5 || show">
                 <div class="fl key">{{f.k}}</div>
                 <div class="fl value">
                     <ul class="type-list">
-                        <li v-for="(option,j) in f.options" :key="j">
-                            <a>{{option.name}}</a>
+                        <li v-for="(option,j) in f.options" :key="j" @click="selectFilter(f.k,option)">
+                            <a v-if="f.unit !== ''">{{option.name}}{{f.unit}}</a>
+                            <a v-else>{{option.name}}</a>
                         </li>
                     </ul>
                 </div>
@@ -147,7 +133,7 @@
                 <div class="fl key brand">{{f.k}}</div>
                 <div class="value logos">
                     <ul class="logo-list">
-                        <li v-for="(option,j) in f.options" v-if="option.image">
+                        <li v-for="(option,j) in f.options" v-if="option.image" @click="selectFilter(f.k,option)">
                             <img :src="option.image" />
                         </li>
                         <li style="text-align: center" v-else>
@@ -262,10 +248,10 @@
                 </div>
             </div>
             <div class="type-wrap" style="text-align: center">
-                <v-btn small flat>
+                <v-btn small flat @click="show=true" v-show="!show">
                     更多<v-icon>arrow_drop_down</v-icon>
                 </v-btn>
-                <v-btn small="" flat>
+                <v-btn small="" flat @click="show=false" v-show="show">
                     收起<v-icon>arrow_drop_up</v-icon>
                 </v-btn>
             </div>
@@ -465,12 +451,15 @@
             ly,
             search:{
                 key:"",  //搜索页面的关键字
-                page: 1
+                page: 1,
+                filter:{} //发送到后台的过滤项
             },
             goodsList:[], //接收搜索到的结果
             total: 0, //总条数
             totalPage: 0,//总页数
-            filters:[] // 过滤参数集合
+            filters:[], // 过滤参数集合
+            show: false, //是否展开更多过滤条件
+            breads:"" //面包屑
         },
 
         components:{
@@ -533,6 +522,12 @@
                     this.goodsList = resp.data.items;
                     this.total = resp.data.total;
                     this.totalPage = resp.data.totalPage;
+                    //初始化商品分类过滤参数
+                    if (resp.data.categories.length === 1){
+                        ly.http.get("/item/category/all/level/" + resp.data.categories[0].id).then(
+                            resp => this.breads = resp.data
+                        );
+                    }
                     //初始化分类过滤
                     this.filters.push({
                         k:"分类",
@@ -543,6 +538,13 @@
                         k:"品牌",
                         options:resp.data.brands
                     });
+                    //初始化其他参数
+                    resp.data.specs.forEach(spec => {
+                        spec.options = spec.options.map( o => {
+                            return {name:o};
+                        });
+                        this.filters.push(spec);
+                    })
                 });
             },
             navPage(){
@@ -569,6 +571,50 @@
                 if(this.search.page < this.totalPage){
                     this.search.page++
                 }
+            },
+            selectFilter(k,o){
+                const obj = {};
+                Object.assign(obj,this.search);
+                if (k === "分类" || k === "品牌"){
+                    o = o.id;
+                }
+                obj.filter[k] = o.name;
+                console.log(obj);
+                this.search = obj;
+            },
+            getFilterValue(k,v){
+                //如果没有过滤参数，直接跳过展示
+                if (!this.filters || this.filters.length === 0) {
+                    return null;
+                }
+                let name = null;
+                //判断是否是品牌
+                if (k === 'brandId'){
+                    this.filters.forEach(f =>{
+                        if (f.k === "品牌"){
+                            f.options.forEach(v => {
+                                if (v.id === v){
+                                    name = v.name;
+                                }
+                            })
+                        }
+                    });
+                    return name;
+                }
+                return v;
+            }
+        },
+        computed:{
+            remainFilters(){
+                const keys = Object.keys(this.search.filter);
+                if (this.search.filter.cid3){
+                    keys.push("cid3");
+                }
+                if (this.search.filter.brandId){
+                    keys.push("brandId");
+                }
+                //使用filter方法进行过滤
+                return this.filters.filter(f => !keys.includes(f.k) && f.options.length > 1);
             }
         },
         created:function(){
@@ -584,9 +630,15 @@
             search.sortBy = search.sortBy || "";
             //5.对排序方式进行初始化，转为布尔值
             search.descending = search.descending === "true" || false;
-            //6.记录在data的search对象中
+            //6.对搜索项进行初始化
+            if (!search.filter){
+                search.filter = {
+                    key:""
+                }
+            }
+            //7.记录在data的search对象中
             this.search = search;
-            //7.发起请求，根据条件搜索
+            //8.发起请求，根据条件搜索
             this.loadData();
         },
     });

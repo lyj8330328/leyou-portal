@@ -166,7 +166,7 @@
                 <div class="value logos">
                     <ul class="logo-list">
                         <li v-for="(option,j) in f.options" v-if="option.image" @click="selectFilter(f.k,option)">
-                            <img :src="option.image" />
+                            <img v-lazy="option.image" />
                         </li>
                         <li style="text-align: center" v-else>
                             <a style="line-height: 30px;font-size: 12px" href="#">{{option.name}}</a>

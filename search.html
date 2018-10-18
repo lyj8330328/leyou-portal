@@ -237,7 +237,7 @@
                     <li class="yui3-u-1-5" v-for="goods in goodsList">
                         <div class="list-wrap">
                             <div class="p-img">
-                                <a href="item.html" target="_blank"><img v-lazy="goods.selected.image" height="200"/></a>
+                                <a :href=" 'item/' + goods.id +'.html'" target="_blank"><img :src="goods.selected.image" height="200"/></a>
                                 <!--多sku图片列表-->
                                 <ul class="skus">
                                     <li :class="{selected: sku.id == goods.selected.id}" v-for="sku in goods.skus" :key="sku.id"
@@ -555,6 +555,7 @@
                 return v;
             },
             removeFilter(k){
+                //属性名也是变量，不能使用.
                 this.search.filter[k] = null;
             },
             priceFilter(v){

@@ -43,7 +43,7 @@
                     <div class="controls">
                         <input type="text" placeholder="请输入你的用户名" class="input-xfat input-xlarge"
                                v-model.lazy="user.username" name="username" data-vv-as="用户名"
-                               v-validate="'required|alpha_dash|min:4|max:30|useful:1'">
+                               v-validate="'required|alpha_dash|min:4|max:15|useful:1'">
                     </div>
                     <span style="color: red;">{{ errors.first('username') }}</span>
                 </div>
@@ -52,7 +52,7 @@
                     <div class="controls">
                         <input type="password" placeholder="设置登录密码" class="input-xfat input-xlarge"
                                v-model="user.password" name="password" data-vv-as="密码"
-                               v-validate="'required|alpha_dash|min:4|max:30'">
+                               v-validate="'required|alpha_dash|min:6|max:25'">
                     </div>
                     <span style="color: red;">{{ errors.first('password') }}</span>
                 </div>
@@ -172,7 +172,7 @@
                             })
                     });
                 }
-            })
+            });
             this.$validator.extend('confirm', {
                 getMessage() {
                     return "两次密码不一致"
@@ -186,7 +186,7 @@
             createVerifyCode() {// 生成短信验证码
                 this.$validator.validate("phone").then(r => {
                     if (r) {
-                        leyou.http.post("/user/send", "phone=" + this.user.phone);
+                        leyou.http.post("/user/code", "phone=" + this.user.phone);
                     }
                 });
 

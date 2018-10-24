@@ -514,7 +514,7 @@ const stringify = function(object, options) {
 
 axios.defaults.baseURL = "http://api.leyou.com/api";
 axios.defaults.timeout = 5000;
-axios.defaults.withCredentials = true
+axios.defaults.withCredentials = true;
 
 // 配置对象
 const ly = leyou = {

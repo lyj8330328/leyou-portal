@@ -8,7 +8,7 @@
         <div class="py-container">
             <div class="yui3-g Logo">
                 <div class="yui3-u Left logoArea">
-                    <a class="logo-bd" title="乐优" href="index.html" target="_blank"></a>
+                    <a class="logo-bd" title="乐优" @click="gotoHome()" href="javascript:void(0)" target="_blank"></a>
                 </div>
                 <div class="yui3-u Center searchArea">
                     <div class="search">
@@ -92,6 +92,9 @@
                         return decodeURI(r[2]);
                     }
                     return null;
+                },
+                gotoHome(){
+                    window.location = "http://www.leyou.com/index.html";
                 }
             },
             created() {

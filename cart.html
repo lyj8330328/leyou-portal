@@ -52,7 +52,7 @@
                                         <div class="item-msg">
 												<span style="line-height:70px ">
 													{{cart.title}}<br/>
-                                                    <span v-for="(v,k) in JSON.parse(JSON.parse(cart.ownSpec))" :key="k">
+                                                    <span v-for="(v,k) in JSON.parse(cart.ownSpec)" :key="k">
                                                         {{v}}
                                                     </span>
 												</span>
@@ -288,11 +288,33 @@
         methods:{
             loadCarts() {
                 //1.先判断登录状态
-                ly.verifyUser().then(() => {
+                ly.verifyUser().then(res => {
                     //2.已经登录
+                    //2.1 检查LocalStorage中是否有数据
+                    const temp = ly.store.get("carts");
+                    if (temp !== null){
+                        //2.2有数据，传到后台与redis数据库中的融合
+                        temp.forEach( s => {
+                            leyou.http.post("/cart/update",{skuId:s.skuId,num:s.num}).then()
+                        });
+                        //2.3合并完毕，删除本地数据
+                        ly.store.del("carts");
+
+                    }
+                    leyou.http.get("/cart").then(({data}) => {
+                        console.log(data);
+                        this.carts = data;
+                        this.selected = data;
+                    }).catch(() => {
+                        console.log("查询失败")
+                    })
+
                 }).catch(() => {
                     //3.未登陆
                     this.carts = ly.store.get("carts") || [];
+                    this.carts.forEach(s => {
+                        s.ownSpec = JSON.parse(s.ownSpec);
+                    })
                     this.selected = this.carts;
                     this.$refs.selectAllTop.checked = true;
                     this.$refs.selectAllBottom.checked = true;
@@ -302,6 +324,7 @@
                 c.num++;
                 ly.verifyUser().then(() =>{
                     //已经登录，向后台发起请求
+                    ly.http.put("/cart",ly.stringify({skuId:c.skuId,num:c.num}))
                 }).catch(() => {
                     //未登录，直接操作本地数据库
                     ly.store.set("carts",this.carts);
@@ -314,6 +337,7 @@
                 c.num--;
                 ly.verifyUser().then(() =>{
                     //已经登录，向后台发起请求
+                    ly.http.put("/cart",ly.stringify({skuId:c.skuId,num:c.num}))
                 }).catch(() => {
                     //未登录，直接操作本地数据库
                     ly.store.set("carts",this.carts);
@@ -322,6 +346,9 @@
             deleteCart(i){
                 ly.verifyUser().then(() =>{
                     //已经登录，向后台发起请求
+                    ly.http.delete("/cart/"+this.carts[i].skuId).then(() => {
+                        this.carts.splice(i,1);
+                    })
                 }).catch(() => {
                     //未登录，直接操作本地数据库
                     this.carts.splice(i,1);

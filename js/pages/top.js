@@ -7,7 +7,7 @@ const lyTop = {
             <div class='py-container'> \
                 <div class='yui3-g Logo'> \
                     <div class='yui3-u Left logoArea'> \
-                        <a class='logo-bd' title='乐优' href='index.html' target='_blank'></a> \
+                        <a class='logo-bd' title='乐优'  @click='gotoIndex' href='javascript:void(0)' target='_blank'></a> \
                     </div> \
                     <div class='yui3-u Center searchArea'> \
                         <div class='search'> \
@@ -36,7 +36,7 @@ const lyTop = {
                         <div class='fr shopcar'> \
                             <div class='show-shopcar' id='shopcar'> \
                                 <span class='car'></span> \
-                                <a class='sui-btn btn-default btn-xlarge' href='cart.html' target='_blank'> \
+                                <a class='sui-btn btn-default btn-xlarge' href='javascript:void(0)' @click='gotoCart' target='_blank'> \
                                     <span>我的购物车</span> \
                                     <i class='shopnum'>0</i> \
                                 </a> \
@@ -61,7 +61,7 @@ const lyTop = {
                             <li class='f-item'>闪购</li> \
                             <li class='f-item'>团购</li> \
                             <li class='f-item'>有趣</li> \
-                            <li class='f-item'><a href='seckill-index.html' target='_blank'>秒杀</a></li> \
+                            <li class='f-item'><a href='javascript:void(0)' @click='gotoSeckill' target='_blank'>秒杀</a></li> \
                         </ul> \
                     </div> \
                     <div class='yui3-u Right'></div> \
@@ -88,6 +88,15 @@ const lyTop = {
                 return decodeURI(r[2]);
             }
             return null;
+        },
+        gotoIndex(){
+            window.location = "http://www.leyou.com/index.html";
+        },
+        gotoSeckill(){
+            window.location = "http://www.leyou.com/seckill-index.html";
+        },
+        gotoCart(){
+            window.location = "http://www.leyou.com/cart.html";
         }
     },
     created() {

@@ -9,13 +9,13 @@ const shortcut = {
                </li>\
                <li v-else class='f-item'> \
                    请<a href='javascript:void(0)' @click='gotoLogin'>登录</a>　 \
-                   <span><a href='register.html' target='_blank'>免费注册</a></span> \
+                   <span><a href='javascript:void(0)' @click='gotoRegister' target='_blank'>免费注册</a></span> \
                </li> \
            </ul> \
            <ul class='fr'> \
                <li class='f-item'>我的订单</li> \
                <li class='f-item space'></li> \
-               <li class='f-item'><a href='home.html' target='_blank'>我的乐优</a></li> \
+               <li class='f-item'><a href='javascript:void(0)' @click='gotoHome' target='_blank'>我的乐优</a></li> \
                <li class='f-item space'></li> \
                <li class='f-item'>乐优会员</li> \
                <li class='f-item space'></li> \
@@ -51,8 +51,13 @@ const shortcut = {
     },
     methods: {
         gotoLogin() {
-            window.location = "login.html?returnUrl=" + window.location;
-
+            window.location = "http://www.leyou.com/login.html?returnUrl=" + window.location;
+        },
+        gotoRegister(){
+            window.location = "http://www.leyou.com/register.html";
+        },
+        gotoHome(){
+            window.location = "http://www.leyou.com/home.html";
         }
     }
 }

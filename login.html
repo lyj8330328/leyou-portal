@@ -112,6 +112,18 @@
                 leyou.http.post("/auth/accredit",leyou.stringify(this.form))
                     .then(resp => {
                         if(resp.status === 200){
+                            //1 登录成功
+                            //1.1 检查LocalStorage中是否有数据
+                            const temp = ly.store.get("carts");
+                            if (temp !== null){
+                                //1.2有数据，传到后台与redis数据库中的融合
+                                temp.forEach( s => {
+                                    leyou.http.post("/cart",{skuId:s.skuId,num:s.num}).then()
+                                });
+                                //1.3合并完毕，删除本地数据
+                                ly.store.del("carts");
+
+                            }
                             const url = leyou.getUrlParam("returnUrl");
                             window.location = url || 'http://www.leyou.com';
                         }

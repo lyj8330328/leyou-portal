@@ -1,26 +1,20 @@
 <!DOCTYPE html>
 <html>
-
-	<head>
-		<meta charset="UTF-8">
-		<meta http-equiv="X-UA-Compatible" content="IE=9; IE=8; IE=7; IE=EDGE">
-		<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7" />
-		<title>乐优商城--微信支付页</title>
-        <link rel="icon" href="/assets/img/favicon.ico">
-		
-	
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=9; IE=8; IE=7; IE=EDGE">
+    <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7" />
+    <title>乐优商城--微信支付页</title>
+    <link rel="icon" href="/assets/img/favicon.ico">
     <link rel="stylesheet" type="text/css" href="css/webbase.css" />
     <link rel="stylesheet" type="text/css" href="css/pages-weixinpay.css" />
 </head>
-
-	<body>
-		
-		<!--页面顶部白条条，由js动态加载-->
-		<script type="text/javascript" src="plugins/jquery/jquery.min.js"></script>
-		<div class="top"></div>
-    	<script type="text/javascript">$(".top").load("shortcut.html");</script>
-		
-		<div class="cart py-container">
+<body>
+<div id="payVm">
+    <div class="top">
+        <shortcut />
+    </div>
+    <div class="cart py-container">
 			<!--logoArea-->
 			<div class="logoArea">
 				<div class="fl logo"><span class="title">收银台</span></div>
@@ -33,16 +27,16 @@
 			
 			<div class="checkout py-container  pay">
 				<div class="checkout-tit">
-					<h4 class="fl tit-txt"><span class="success-icon"></span><span  class="success-info">订单提交成功，请您及时付款！订单号：56789065645</span></h4>
-                    <span class="fr"><em class="sui-lead">应付金额：</em><em  class="orange money">￥17,654</em>元</span>
+					<h4 class="fl tit-txt"><span class="success-icon"></span><span  class="success-info">订单提交成功，请您及时付款！订单号：{{orderId}}</span></h4>
+                    <span class="fr"><em class="sui-lead">应付金额：</em><em  class="orange money">￥{{totalPay}}</em>元</span>
 					<div class="clearfix"></div>
 				</div>				
 				<div class="checkout-steps">
 					<div class="fl weixin">微信支付</div>
                     <div class="fl sao"> 
-                        <p class="red">二维码已过期，刷新页面重新获取二维码。</p>                      
+                        <p class="red">二维码有效时间为2小时，请及时支付</p>
                         <div class="fl code">
-                            <img src="img/erweima.png" alt="">
+                            <div id="qrImage"></div>
                             <div class="saosao">
                                 <p>请使用微信扫一扫</p>
                                 <p>扫描二维码支付</p>
@@ -54,31 +48,92 @@
                         
                     </div>
                     <div class="clearfix"></div>
-				    <p><a href="pay.html" target="_blank">> 其他支付方式</a></p>
+				    <p><a href="#" target="_blank">> 其他支付方式</a></p>
 				</div>
 			</div>
 
 		</div>
-
-
-	<!-- 底部栏位 -->
-	<!--页面底部，由js动态加载-->
-	<div class="clearfix footer"></div>
-	<script type="text/javascript">$(".footer").load("foot.html");</script>
-	<!--页面底部END-->
-		
-	
-<script type="text/javascript" src="js/plugins/jquery/jquery.min.js"></script>
+</div>
+<script src="./js/vue/vue.js"></script>
+<script src="./js/axios.min.js"></script>
+<script src="./js/common.js"></script>
+<script src="./js/qrcode.min.js"></script>
+<script type="text/javascript">
+    var payVm = new Vue({
+        el:"#payVm",
+        data:{
+            ly,
+            orderId:0, //订单id
+            totalPay:0, //总金额
+        },
+        components:{
+            shortcut: () => import("/js/pages/shortcut.js")
+        },
+        created(){
+            this.loadData();
+        },
+        methods:{
+            loadData(){
+                //1.判断用户是否登录
+                ly.verifyUser().then(() => {
+                    //2.获取订单编号和总金额
+                    this.orderId = ly.store.get("orderId");
+                    this.totalPay = ly.store.get("totalPay");
+                    //3.获取请求链接
+                    ly.http.get("/order/url/" + this.orderId).then(resp => {
+                        //3.1 生成付款二维码
+                        new QRCode(document.getElementById("qrImage"),{
+                            text:resp.data,
+                            width:250,
+                            height:250,
+                            colorDark: "#000000",
+                            colorLight: "#ffffff",
+                            correctLevel: QRCode.CorrectLevel.H
+                        });
+                        //3.2开启定时任务，查询付款状态
+                        const taskId = setInterval(() => {
+                            ly.http.get("/order/state" + this.orderId).then(resp => {
+                                let i = resp.data;
+                                if (i === 1){
+                                    //3.3 付款成功
+                                    clearInterval(taskId);
+                                    //3.4 跳转到付款成功页
+                                    location.href = "/paysuccess.html";
+                                    //3.5 删除本地存储中的订单号
+                                    ly.store.del("orderId");
+                                } else if (i === 2){
+                                    //3.5付款失败
+                                    clearInterval(taskId);
+                                    //3.6跳转到付款失败页
+                                    location.href = "/payfail.html"
+                                }
+                            })
+                        },3000);
+                    });
+                }).catch(() => {
+                    //4.未登录，跳转至登录页
+                    location.href = "/login.html?returnUrl=" + location.href;
+                })
+            }
+        }
+    });
+</script>
+    <!-- 底部栏位 -->
+    <!--页面底部，由js动态加载-->
+    <div class="clearfix footer"></div>
+    <script type="text/javascript" src="js/plugins/jquery/jquery.min.js"></script>
+    <script type="text/javascript">$(".footer").load("foot.html");</script>
+    <!--页面底部END-->
 <script type="text/javascript" src="js/plugins/jquery.easing/jquery.easing.min.js"></script>
 <script type="text/javascript" src="js/plugins/sui/sui.min.js"></script>
 <script type="text/javascript" src="js/widget/nav.js"></script>
 <script type="text/javascript">
-			$(function(){
-				$("ul.payType li").click(function(){
-					$(this).css("border","2px solid #E4393C").siblings().css("border-color","#ddd");
-				})
-			})
-		</script>
+    $(function(){
+        $("ul.payType li").click(function(){
+            $(this).css("border","2px solid #E4393C").siblings().css("border-color","#ddd");
+        })
+    })
+</script>
 </body>
 
 </html>

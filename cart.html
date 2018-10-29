@@ -52,7 +52,7 @@
                                         <div class="item-msg">
 												<span style="line-height:70px ">
 													{{cart.title}}<br/>
-                                                    <span v-for="(v,k) in JSON.parse(cart.ownSpec)" :key="k">
+                                                    <span v-for="(v,k) in cart.ownSpec" :key="k">
                                                         {{v}}
                                                     </span>
 												</span>
@@ -94,7 +94,7 @@
                         <span><em>已节省：</em><i>-¥20.00</i></span>
                     </div>
                     <div class="sumbtn">
-                        <a class="sum-btn"  href="getOrderInfo.html"  target="_blank">结算</a>
+                        <a class="sum-btn"  @click.prevent="toOrderInfo"  target="_blank">结算</a>
                     </div>
                 </div>
             </div>
@@ -292,7 +292,13 @@
                     //2.已经登录
                     leyou.http.get("/cart").then(({data}) => {
                         this.carts = data;
-                        this.selected = data;
+                        this.carts.forEach(s => {
+                            s.ownSpec = JSON.parse(s.ownSpec);
+                        });
+                        this.selected = this.carts;
+                        this.$refs.selectAllTop.checked = true;
+                        this.$refs.selectAllBottom.checked = true;
+
                     }).catch(() => {
                         console.log("查询失败")
                     })
@@ -301,8 +307,8 @@
                     //3.未登陆
                     this.carts = ly.store.get("carts") || [];
                     this.carts.forEach(s => {
-                        s.ownSpec = JSON.parse(s.ownSpec);
-                    })
+                        s.ownSpec = JSON.parse(JSON.parse(s.ownSpec));
+                    });
                     this.selected = this.carts;
                     this.$refs.selectAllTop.checked = true;
                     this.$refs.selectAllBottom.checked = true;
@@ -336,7 +342,7 @@
                     //已经登录，向后台发起请求
                     ly.http.delete("/cart/"+this.carts[i].skuId).then(() => {
                         this.carts.splice(i,1);
-                    })
+                    });
                     console.log(this.carts[i].skuId)
                 }).catch(() => {
                     //未登录，直接操作本地数据库
@@ -363,6 +369,19 @@
                     this.$refs.selectAllTop.checked=true;
                     this.$refs.selectAllBottom.checked=true;
                 }
+            },
+            toOrderInfo(){
+                //1.判断是否登录
+                ly.verifyUser().then(() => {
+                    //2.已登录
+                    //2.1 保存已经选购的购物车记录到localStorage
+                    ly.store.set("selectedCarts",this.selected);
+                    //2.2 跳转到订单页面
+                    window.location.href = "/getOrderInfo.html";
+                }).catch(() => {
+                    //3.未登录
+                    window.location.href = "/login.html?returnUrl=" + window.location.href;
+                })
             }
 
         }

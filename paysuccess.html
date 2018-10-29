@@ -48,8 +48,12 @@
                     totalPay:0, //总金额
                 },
                 created(){
-                    this.totalPay = ly.store.get("totalPay");
-                    ly.store.del("totalPay");
+                    ly.verifyUser().then(() => {
+                        this.totalPay = ly.store.get("totalPay");
+                        ly.store.del("totalPay");
+                    }).catch(() => {
+                        location.href = "/login.html?returnUrl=" + location.href;
+                    });
                 },
                 components:{
                     shortcut: () => import("/js/pages/shortcut.js")

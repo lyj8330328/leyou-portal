@@ -23,7 +23,7 @@
 
         <!--logoArea-->
         <div class="logoArea">
-            <div class="fl logo"><span class="title">购物车</span></div>
+            <a href="index.html"><div class="fl logo"><span class="title">购物车</span></div></a>
         </div>
 
         <!--All goods-->
@@ -48,7 +48,7 @@
                                 </li>
                                 <li class="yui3-u-11-24">
                                     <div class="good-item">
-                                        <div class="item-img"><img :src="cart.images" width="80px" height="80px"/></div>
+                                        <div class="item-img"><img :src="cart.image" width="80px" height="80px"/></div>
                                         <div class="item-msg">
 												<span style="line-height:70px ">
 													{{cart.title}}<br/>
@@ -307,7 +307,7 @@
                     //3.未登陆
                     this.carts = ly.store.get("carts") || [];
                     this.carts.forEach(s => {
-                        s.ownSpec = JSON.parse(JSON.parse(s.ownSpec));
+                        s.ownSpec = JSON.parse(s.ownSpec);
                     });
                     this.selected = this.carts;
                     this.$refs.selectAllTop.checked = true;
@@ -343,7 +343,7 @@
                     ly.http.delete("/cart/"+this.carts[i].skuId).then(() => {
                         this.carts.splice(i,1);
                     });
-                    console.log(this.carts[i].skuId)
+                    //console.log(this.carts[i].skuId)
                 }).catch(() => {
                     //未登录，直接操作本地数据库
                     this.carts.splice(i,1);
@@ -358,9 +358,6 @@
                 }
             },
             selectSingle(){
-
-                console.log(this.selected.length);
-                console.log(ly.store.get("carts").length);
 
                 if(this.selected.length !== ly.store.get("carts").length - 1){
                     this.$refs.selectAllTop.checked=false;

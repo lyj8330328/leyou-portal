@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>无标题文档</title>
+    <style type="text/css">
+        select{ width:100px; text-align:center;}
+    </style>
+    <script src="js/v-select.js"></script>
+</head>
+
+<body>
+地区：
+<select id="province" onchange="changeSelect(this);">
+    <option value="000000" style="color:#999;" disabled="disabled" >-请选择省-</option>
+</select>
+<select id="city" onchange="changeSelect(this);">
+    <option value="000000" style="color:#999;" disabled="disabled" >-请选择市-</option>
+</select>
+<select id="district">
+    <option value="000000" style="color:#999;" disabled="disabled">-请选区-</option>
+</select>
+</body>
+</html>

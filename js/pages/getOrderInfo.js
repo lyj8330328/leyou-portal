@@ -4,7 +4,7 @@ $(function(){
 	},function(){
 		$(this).removeClass("address-hover");	
 	});
-})
+});
 
 $(function(){
 	$(".addr-item .name").click(function(){
@@ -13,4 +13,4 @@ $(function(){
 	$(".payType li").click(function(){
 		 $(this).toggleClass("selected").siblings().removeClass("selected");	
 	});
-})
+});

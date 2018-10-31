@@ -37,19 +37,21 @@
 				</div>
 				<div class="step-cont">
 					<div class="addressInfo">
-						<ul class="addr-detail">
-							<li class="addr-item" v-for="(a,i) in addresses" :key="i">
-							  <div>
-								  <div :class="{con:true,name:true,selected:i === selectedAddress}"><a href="javascript:;" @click.stop="selectedAddress=i" >{{a.name}}<span title="点击取消选择"></span>&nbsp;</a></div>
-								<div class="con address">{{a.state + a.city + a.district + a.address}} <span>{{a.phone}}</span>
-									<span class="base" v-if="a.default">默认地址</span>
-									<span class="edittext"><a data-toggle="modal" data-target=".edit" @click="editAddress" data-keyboard="false" >编辑</a>&nbsp;&nbsp;<a href="javascript:;">删除</a></span>
-								</div>
-								<div class="clearfix"></div>
-							  </div>
+                        <ul class="addr-detail">
+                            <li class="addr-item" v-for="(a,i) in addresses" :key="i">
+                                <div>
+                                    <div :class="{con:true,name:true,selected:i === selectedAddress}"><a href="javascript:;" @click.stop="selectedAddress=i" >{{a.name}}<span title="点击取消选择"></span>&nbsp;</a></div>
+                                    <div class="con address">{{a.state + a.city + a.district + a.address}} <span>{{a.phone}}</span>
+                                        <span class="base" v-if="a.defaultAddress">默认地址</span>
+                                        <span class="edittext">
+                                            <a data-toggle="modal" @click="editAddress(a.id)" data-target=".edit" data-keyboard="false" >编辑</a>&nbsp;&nbsp;
+                                            <a href="javascript:;" @click="deleteAddress(a.id)">删除</a></span>
+                                    </div>
+                                    <div class="clearfix"></div>
+                                </div>
 
-							</li>
-						</ul>
+                            </li>
+                        </ul>
 						<!--添加地址-->
                           <div tabindex="-1" role="dialog" data-hasfoot="false" class="sui-modal hide fade edit">
 						  <div class="modal-dialog">
@@ -59,7 +61,7 @@
 						        <h4 id="myModalLabel" class="modal-title">{{isEdit ? "编辑" : "添加"}}收货地址</h4>
 						      </div>
 						      <div class="modal-body">
-						      	<form action="" class="sui-form form-horizontal">
+						      	<form id="myform" action="" class="sui-form form-horizontal">
 									<div class="control-group">
 									    <label class="control-label">收货人：</label>
 									    <div class="controls">
@@ -116,7 +118,7 @@
 									</div>
 									<div class="control-group">
 										<div  style="margin-left: 100px">
-											<input type="checkbox" v-model="addressForm.default" class="checkbox">设为默认收货地址
+											<input type="checkbox" v-model="addressForm.defaultAddress" class="checkbox">设为默认收货地址
 										</div>
 									</div>
 
@@ -251,30 +253,11 @@
 					district:'', // 区/县
 					address:'', //详细地址
 					label:'', //标签
-                    default:false //是否为默认地址
+                    defaultAddress:false //是否为默认地址
 				},
                 addresses:[// 可选地址列表,假数据，需要从后台查询
-					{
-					    name:"虎哥",// 收件人姓名
-						phone:"15800000000",// 电话
-						state:"上海",// 省份
-						city:"上海",// 城市
-						district:"浦东新区",// 区
-						address:"航头镇航头路18号传智播客 3号楼",// 街道地址
-						zipCode:"210000", // 邮编
-						default: true
-					},
-                    {
-                        name:"张三",// 收件人姓名
-                        phone:"13600000000",// 电话
-                        state:"北京",// 省份
-                        city:"北京",// 城市
-                        district:"朝阳区",// 区
-                        address:"天堂路 3号楼",// 街道地址
-                        zipCode:"100000", // 邮编
-                        default: false
-                    }
-				],
+                    {},{},{},{},{},{},
+                ],
 				selectedAddress: 0,//选中的快递地址下标
 				order:{
                     paymentType: 1, //付款方式，默认1：微信支付
@@ -303,32 +286,78 @@
 			},
 			methods:{
                 clear(){
-                    this.addressForm.name = '';
-                    this.addressForm.phone = '';
-                    this.addressForm.zipCode = '';
-                    this.addressForm.state = '';
-                    this.addressForm.city = '';
-                    this.addressForm.district = '';
-                    this.addressForm.address = '';
-                    this.addressForm.label = '';
-                    this.addressForm.default = false;
+                    this.addressForm ={};
+                    document.getElementById("myform").reset();
+                },
+                addAddress(){
+                    this.isEdit = false;
+                    this.clear();
                 },
                 addressSave(){
-					console.log(this.addressForm)
+                    //1.验证是否登录
+                    ly.verifyUser().then(() => {
+                        //2.登录，发起请求，保存或者修改地址
+                        if (this.isEdit === false) {
+                            //2.1新增
+                            ly.http.post("/address", this.addressForm).then(() => {
+                                //保存成功，重新加载数据
+                                this.loadData();
+                                //清空表单
+                                this.clear();
+                            }).catch()
+                        }else {
+                            //2.2 修改
+                            ly.http.put("/address", this.addressForm).then(() => {
+                                //修改成功，重新加载数据
+                                this.loadData();
+                                //清空表单
+                                this.clear();
+                            }).catch()
+                        }
+                    }).catch(() => {
+                        //3.未登录
+                        window.location.href = "/login.html?returnUrl=" + window.location.href;
+                    });
 				},
-                addAddress(){
-                    console.log("新增");
+                deleteAddress(id){
+                    ly.verifyUser().then(() => {
+                        ly.http.delete("/address/"+id).then(() => {
+                            this.loadData();
+                        })
+                    }).catch(() => {
+                        window.location.href = "/login.html?returnUrl=" + window.location.href;
+                    });
                 },
-                editAddress(){
-                    console.log("修改");
+                editAddress(id){
                     this.isEdit = true;
+                    ly.verifyUser().then(() => {
+                        ly.http.get("address/"+id).then(({data}) => {
+                            this.addressForm = data;
+                        })
+                    }).catch(() => {
+                        window.location = "/login.html?returnUrl=" + window.location.href;
+                    })
                 },
                 loadData(){
 					ly.verifyUser().then(() => {
 					    //1.已经登录，获取购物车中要下单的信息
 						this.carts = ly.store.get("selectedCarts") || [];
+						//2.获取用户的地址信息
+                        ly.http.get("/address").then(({data}) => {
+                            //对data进行处理，把默认地址放在第一位
+                            let temp;
+                            for (let i = 0; i < data.length; i++){
+                                if (data[i].defaultAddress){
+                                    temp = data[0];
+                                    data[0] = data[i];
+                                    data[i] = temp;
+                                    break;
+                                }
+                            }
+                            this.addresses = data;
+                        })
 					}).catch(() => {
-					    //2.未登录，重定向到登录页面
+					    //3.未登录，重定向到登录页面
 						window.location = "/login.html?returnUrl=" + window.location.href;
 					})
 				},
@@ -385,17 +414,34 @@
 			}
         });
 	</script>
-
 	<!-- 底部栏位 -->
 	<!--页面底部，由js动态加载-->
 	<div class="clearfix footer"></div>
 	<script type="text/javascript" src="js/plugins/jquery/jquery.min.js"></script>
 	<script type="text/javascript">$(".footer").load("foot.html");</script>
+    <script>
+        $(function(){
+            $(".address").hover(function(){
+                $(this).addClass("address-hover");
+            },function(){
+                $(this).removeClass("address-hover");
+            });
+        });
+
+        $(function(){
+            $(".addr-item .name").click(function(){
+                $(this).toggleClass("selected").siblings().removeClass("selected");
+            });
+            $(".payType li").click(function(){
+                $(this).toggleClass("selected").siblings().removeClass("selected");
+            });
+        });
+    </script>
 	<!--页面底部END-->
 
 <script type="text/javascript" src="js/plugins/jquery.easing/jquery.easing.min.js"></script>
 <script type="text/javascript" src="js/plugins/sui/sui.min.js"></script>
-<script type="text/javascript" src="js/pages/getOrderInfo.js"></script>
+<!--<script type="text/javascript" src="js/pages/getOrderInfo.js"></script>-->
 </body>
 
 </html>

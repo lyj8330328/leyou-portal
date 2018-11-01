@@ -150,16 +150,20 @@
                                             <li v-if="o.status === 1">等待买家付款</li>
                                             <li v-if="o.status === 2">已付款</li>
                                             <li v-if="o.status === 3">已发货</li>
+                                            <li v-if="o.status === 4">待评价</li>
+                                            <li v-if="o.status === 5">交易关闭</li>
+                                            <li v-if="o.status === 6">交易成功</li>
                                             <li><a href="home-orderDetail.html" class="btn">订单详情 </a></li>
                                         </ul>
                                     </td>
                                     <td width="10%" class="center" :rowspan="o.orderDetails.length" v-if="j === 0">
                                         <ul class="unstyled">
-                                            <li v-if="o.status === 1"><a href="#" class="sui-btn btn-info">立即付款</a></li>
-                                            <li v-if="o.status === 2"><a href="#" class="sui-btn btn-info">提醒发货</a></li>
-                                            <li v-if="o.status === 3"><a href="#" class="sui-btn btn-info">确认收货</a></li>
+                                            <li v-if="o.status === 1"><a href="#" @click="payment(o.orderId,getTotalPrice(o))" class="sui-btn btn-info">立即付款</a></li>
+                                            <li v-if="o.status === 2"><a href="#" @click="deliver(o.orderId)" class="sui-btn btn-info">提醒发货</a></li>
+                                            <li v-if="o.status === 3"><a href="#" @click="receiveGoods(o.orderId)" class="sui-btn btn-info">确认收货</a></li>
+                                            <li v-if="o.status === 4"><a href="#" @click="review(o.orderId)" class="sui-btn btn-info">评价</a></li>
                                             <li v-if="o.status === 3">4天23时后自动确认</li>
-                                            <li><a href="javascript:void(0)">取消订单</a></li>
+                                            <li><a v-if="o.status === 1" href="javascript:void(0)" @click="cancelOrder(o.orderId)">取消订单</a></li>
                                         </ul>
                                     </td>
                                 </tr>
@@ -321,6 +325,41 @@
             this.loadOrder();
         },
         methods: {
+            payment(orderId,totalPay){
+                //付款
+                //1.修改订单状态
+                this.updateOrderState(orderId,2);
+                //2.跳转到支付页面
+                window.location = "pay.html";
+                //4.2 添加总金额和订单号到本地数据
+                ly.store.set("totalPay",totalPay);
+                ly.store.set("orderId",orderId);
+            },
+            deliver(orderId){
+                //提醒发货
+                this.updateOrderState(orderId,3);
+            },
+            receiveGoods(orderId){
+                //确认收货
+                this.updateOrderState(orderId,4);
+            },
+            cancelOrder(orderId){
+                //取消订单
+                this.updateOrderState(orderId,5);
+            },
+            review(orderId){
+                //评价
+                this.updateOrderState(orderId,6);
+            },
+            updateOrderState(orderId,status){
+                ly.verifyUser().then(() => {
+                    ly.http.put("/order/"+orderId+"/"+status).then(() => {
+                        this.loadOrder();
+                    })
+                }).catch(() => {
+                    this.gotoLogin();
+                })
+            },
             navPage(){
                 this.query.page = this.$refs.page.value ;
             },

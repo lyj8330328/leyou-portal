@@ -388,8 +388,9 @@
                             totalPay:this.totalPay,
                             actualPay:this.actualPay,
                         });
+                        const {discount, ...rest} = this.order;
                         //4.提交订单
-                        ly.http.post("/order",this.order,{
+                        ly.http.post("/order",rest,{
                             transformResponse:[
                                 //对响应进行处理的回调
                                 function (data) {

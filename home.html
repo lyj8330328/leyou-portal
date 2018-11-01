@@ -56,11 +56,11 @@
                 <div class="list-items">
                     <dl>
                         <dt><i>·</i> 订单中心</dt>
-                        <dd><a href="javascript:void(0)" @click="query.status=0" :class="{'list-active':query.status===0}">我的订单</a></dd>
-                        <dd><a href="javascript:void(0)" @click="query.status=1" :class="{'list-active':query.status===1}">待付款</a></dd>
-                        <dd><a href="javascript:void(0)" @click="query.status=2" :class="{'list-active':query.status===2}">待发货</a></dd>
-                        <dd><a href="javascript:void(0)" @click="query.status=3" :class="{'list-active':query.status===3}">待收货</a></dd>
-                        <dd><a href="javascript:void(0)" @click="query.status=4" :class="{'list-active':query.status===4}">待评价</a></dd>
+                        <dd><a href="javascript:void(0)" @click="query.status=0,orderList='',orderDetail='none'" :class="{'list-active':query.status===0}">我的订单</a></dd>
+                        <dd><a href="javascript:void(0)" @click="query.status=1,orderList='',orderDetail='none'" :class="{'list-active':query.status===1}">待付款</a></dd>
+                        <dd><a href="javascript:void(0)" @click="query.status=2,orderList='',orderDetail='none'" :class="{'list-active':query.status===2}">待发货</a></dd>
+                        <dd><a href="javascript:void(0)" @click="query.status=3,orderList='',orderDetail='none'" :class="{'list-active':query.status===3}">待收货</a></dd>
+                        <dd><a href="javascript:void(0)" @click="query.status=4,orderList='',orderDetail='none'" :class="{'list-active':query.status===4}">待评价</a></dd>
                     </dl>
                     <dl>
                         <dt><i>·</i> 我的中心</dt>
@@ -81,124 +81,223 @@
             <!--右侧主内容-->
             <div class="yui3-u-5-6 order-pay">
                 <div class="body">
-                    <div class="table-title">
-                        <table class="sui-table  order-table">
-                            <tr>
-                                <thead>
-                                <th width="35%">宝贝</th>
-                                <th width="5%">单价</th>
-                                <th width="5%">数量</th>
-                                <th width="8%">商品操作</th>
-                                <th width="10%">实付款</th>
-                                <th width="10%">交易状态</th>
-                                <th width="10%">交易操作</th>
-                                </thead>
-                            </tr>
-                        </table>
-                    </div>
-                    <div class="order-detail">
-                        <div class="orders">
+                    <div id="orderList" :style="{display:orderList}">
+                        <div class="table-title">
+                            <table class="sui-table  order-table">
+                                <tr>
+                                    <thead>
+                                    <th width="35%">宝贝</th>
+                                    <th width="5%">单价</th>
+                                    <th width="5%">数量</th>
+                                    <th width="8%">商品操作</th>
+                                    <th width="10%">实付款</th>
+                                    <th width="10%">交易状态</th>
+                                    <th width="10%">交易操作</th>
+                                    </thead>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="order-detail">
+                            <div class="orders">
+                                <div class="choose-order">
+                                    <div class="sui-pagination pagination-large top-pages">
+                                        <ul>
+                                            <li class="prev disabled"><a @click="prevPage">上一页</a></li>
+
+                                            <li class="next"><a @click="nextPage">下一页</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <!--order1-->
+                                <div v-for="(o, i) in orders" :key="i">
+                                <div class="choose-title">
+                                    <label data-toggle="checkbox" class="checkbox-pretty ">
+                                        <input type="checkbox" checked="checked" />
+                                        <span>{{formatDate(o.createTime)}}　订单编号：{{o.orderId}} <a>联系客服</a></span>
+                                    </label>
+                                    <a class="sui-btn btn-info share-btn">分享</a>
+                                </div>
+                                <table class="sui-table table-bordered order-datatable">
+                                    <tbody>
+                                    <tr v-for="(d,j) in o.orderDetails" :key="j">
+                                        <td width="35%">
+                                            <div class="typographic"><img width="70px" height="70px" :src="d.image"/>
+                                                <a href="#" class="block-text">包邮 {{d.title}}</a>
+                                                <span class="guige" v-for="(v,k) in JSON.parse(d.ownSpec)" :key="k">{{k+':'+ v}}</span>
+                                            </div>
+                                        </td>
+                                        <td width="5%" class="center">
+                                            <ul class="unstyled">
+                                                <li>¥{{formatPrice(d.price)}}</li>
+                                            </ul>
+                                        </td>
+                                        <td width="5%" class="center">{{d.num}}</td>
+                                        <td width="8%" class="center" :rowspan="o.orderDetails.length" v-if="j === 0">
+                                            <ul class="unstyled" v-if="o.status === 3">
+                                                <li>已发货</li>
+                                                <li><a>退货/退款</a></li>
+                                            </ul>
+                                        </td>
+                                        <td width="10%" class="center" :rowspan="o.orderDetails.length" v-if="j === 0">
+                                            <ul class="unstyled">
+                                                <li>¥{{formatPrice(getTotalPrice(o))}}</li>
+                                                <li>（含运费：￥0.00）</li>
+                                            </ul>
+                                        </td>
+                                        <td width="10%" class="center" :rowspan="o.orderDetails.length" v-if="j === 0">
+                                            <ul class="unstyled">
+                                                <li v-if="o.status === 1">等待买家付款</li>
+                                                <li v-if="o.status === 2">已付款</li>
+                                                <li v-if="o.status === 3">已发货</li>
+                                                <li v-if="o.status === 4">待评价</li>
+                                                <li v-if="o.status === 5">交易关闭</li>
+                                                <li v-if="o.status === 6">交易成功</li>
+                                                <li><a href="#" v-if="o.status !== 5" @click="orderDetailsShow(o.orderId)" class="btn">订单详情 </a></li>
+                                            </ul>
+                                        </td>
+                                        <td width="10%" class="center" :rowspan="o.orderDetails.length" v-if="j === 0">
+                                            <ul class="unstyled">
+                                                <li v-if="o.status === 1"><a href="#" @click="payment(o.orderId,getTotalPrice(o))" class="sui-btn btn-info">立即付款</a></li>
+                                                <li v-if="o.status === 2"><a href="#" @click="deliver(o.orderId)" class="sui-btn btn-info">提醒发货</a></li>
+                                                <li v-if="o.status === 3"><a href="#" @click="receiveGoods(o.orderId)" class="sui-btn btn-info">确认收货</a></li>
+                                                <li v-if="o.status === 4"><a href="#" @click="review(o.orderId)" class="sui-btn btn-info">评价</a></li>
+                                                <li v-if="o.status === 3">4天23时后自动确认</li>
+                                                <li><a v-if="o.status === 1" href="javascript:void(0)" @click="cancelOrder(o.orderId)">取消订单</a></li>
+                                            </ul>
+                                        </td>
+                                    </tr>
+
+
+                                    </tbody>
+                                </table>
+                                </div>
+                            </div>
                             <div class="choose-order">
                                 <div class="sui-pagination pagination-large top-pages">
                                     <ul>
-                                        <li class="prev disabled"><a href="#">上一页</a></li>
-
-                                        <li class="next"><a href="#">下一页</a></li>
+                                        <li class="prev disabled">
+                                            <a @click="prevPage">«上一页</a>
+                                        </li>
+                                        <li :class="{active:index(i) === query.page}" v-for="i in Math.min(5,totalPage)" :key="i">
+                                            <a @click="query.page=index(i)">{{index(i)}}</a>
+                                        </li>
+                                        <li class="dotted" v-show="totalPage>5"><span>...</span></li>
+                                        <li :class="{next:true,disabled:query.page === totalPage}">
+                                            <a @click="nextPage">下一页»</a>
+                                        </li>
                                     </ul>
+                                    <div>
+                                        <span>共{{totalPage}}页&nbsp;</span>
+                                        <span>
+                                            到第
+                                            <input type="text" class="page-num" ref="page">
+                                            页 <button class="page-confirm" @click="navPage">确定</button>
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
 
-                            <!--order1-->
-                            <div v-for="(o, i) in orders" :key="i">
-                            <div class="choose-title">
-                                <label data-toggle="checkbox" class="checkbox-pretty ">
-                                    <input type="checkbox" checked="checked" />
-                                    <span>{{formatDate(o.createTime)}}　订单编号：{{o.orderId}} <a>联系客服</a></span>
-                                </label>
-                                <a class="sui-btn btn-info share-btn">分享</a>
-                            </div>
-                            <table class="sui-table table-bordered order-datatable">
-                                <tbody>
-                                <tr v-for="(d,j) in o.orderDetails" :key="j">
-                                    <td width="35%">
-                                        <div class="typographic"><img width="70px" height="70px" :src="d.image"/>
-                                            <a href="#" class="block-text">包邮 {{d.title}}</a>
-                                            <span class="guige" v-for="(v,k) in JSON.parse(d.ownSpec)" :key="k">{{k+':'+ v}}</span>
+                            <div class="clearfix"></div>
+                        </div>
+                    </div>
+
+                    <div id="orderDetail" :style="{display:orderDetail}">
+                        <div class="order-detail">
+                            <h4>订单详情</h4>
+                            <div class="order-bar">
+                                <div class="sui-steps-round steps-round-auto steps-4">
+                                    <div :class="s.stateClass" v-for="(s,i) in orderState" :key="i">
+                                        <div class="wrap">
+                                        <div class="round" v-html="i+1"></div>
+                                        <div v-if="i + 1 !== 5" class="bar"></div>
                                         </div>
-                                    </td>
-                                    <td width="5%" class="center">
-                                        <ul class="unstyled">
-                                            <li>¥{{formatPrice(d.price)}}</li>
-                                        </ul>
-                                    </td>
-                                    <td width
-                                                ="5%" class="center">{{d.num}}</td>
-                                    <td width="8%" class="center" :rowspan="o.orderDetails.length" v-if="j === 0">
-                                        <ul class="unstyled" v-if="o.status === 3">
-                                            <li>已发货</li>
-                                            <li><a>退货/退款</a></li>
-                                        </ul>
-                                    </td>
-                                    <td width="10%" class="center" :rowspan="o.orderDetails.length" v-if="j === 0">
-                                        <ul class="unstyled">
-                                            <li>¥{{formatPrice(getTotalPrice(o))}}</li>
-                                            <li>（含运费：￥0.00）</li>
-                                        </ul>
-                                    </td>
-                                    <td width="10%" class="center" :rowspan="o.orderDetails.length" v-if="j === 0">
-                                        <ul class="unstyled">
-                                            <li v-if="o.status === 1">等待买家付款</li>
-                                            <li v-if="o.status === 2">已付款</li>
-                                            <li v-if="o.status === 3">已发货</li>
-                                            <li v-if="o.status === 4">待评价</li>
-                                            <li v-if="o.status === 5">交易关闭</li>
-                                            <li v-if="o.status === 6">交易成功</li>
-                                            <li><a href="home-orderDetail.html" class="btn">订单详情 </a></li>
-                                        </ul>
-                                    </td>
-                                    <td width="10%" class="center" :rowspan="o.orderDetails.length" v-if="j === 0">
-                                        <ul class="unstyled">
-                                            <li v-if="o.status === 1"><a href="#" @click="payment(o.orderId,getTotalPrice(o))" class="sui-btn btn-info">立即付款</a></li>
-                                            <li v-if="o.status === 2"><a href="#" @click="deliver(o.orderId)" class="sui-btn btn-info">提醒发货</a></li>
-                                            <li v-if="o.status === 3"><a href="#" @click="receiveGoods(o.orderId)" class="sui-btn btn-info">确认收货</a></li>
-                                            <li v-if="o.status === 4"><a href="#" @click="review(o.orderId)" class="sui-btn btn-info">评价</a></li>
-                                            <li v-if="o.status === 3">4天23时后自动确认</li>
-                                            <li><a v-if="o.status === 1" href="javascript:void(0)" @click="cancelOrder(o.orderId)">取消订单</a></li>
-                                        </ul>
-                                    </td>
-                                </tr>
+                                        <label>
+                                            <span v-html="s.stateTitle"></span>
+                                            <span v-html="s.stateDay"></span>
+                                            <span v-html="s.stateTime"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="order-state">
+                                <p>当前订单状态：
+                                    <span v-if="orderStatus.status === 1" class="red">未付款</span>
+                                    <span v-if="orderStatus.status === 2" class="red">等待发货</span>
+                                    <span v-if="orderStatus.status === 3" class="red">已发货</span>
+                                    <span v-if="orderStatus.status === 4" class="red">交易成功</span>
+                                    <span v-if="orderStatus.status === 5" class="red">交易关闭</span>
+                                    <span v-if="orderStatus.status === 6" class="red">已评价</span>
+                                </p>
+                                <p>还剩06天00小时 自动确认收货</p>
+                            </div>
+                        </div>
+                        <div class="order-info">
+                            <h5>订单信息</h5>
+                            <p>收货地址：<span v-html="detailOrder.receiverAddress">无</span>  </p>
+                            <p>订单单号：<span v-html="detailOrder.orderId">无</span></p>
+                            <p>下单时间：
+                                <span v-if="orderStatus.createTime !== null" v-html="formatDate(orderStatus.createTime)"></span>
+                                <span v-else>暂无数据</span>
+                            </p>
+                            <p>支付时间：
+                                <span v-if="orderStatus.paymentTime !== null" v-html="formatDate(orderStatus.paymentTime)"></span>
+                                <span v-else >暂无数据</span>
+                            </p>
+                            <p>支付方式：
+                                <span v-if="detailOrder.paymentType === 1">微信支付(默认)</span>
+                                <span v-else>货到付款</span>
+                            </p>
+                            <p>发货时间：
+                                <span v-if="orderStatus.consignTime !==null" v-html="formatDate(orderStatus.consignTime)"></span>
+                                <span v-else >暂无数据</span>
+                            </p>
+                        </div>
+                        <div class="order-goods">
+                            <table class="sui-table">
+                                    <thead>
+                                        <th class="center" >商品</th>
+                                        <th class="center" >价格</th>
+                                        <th class="center" >优惠</th>
+                                        <th class="center" >状态</th>
+                                    </thead>
 
-
+                                <tbody>
+                                    <tr>
+                                        <td colspan="5">订单编号：
+                                            <span v-html="detailOrder.orderId"></span>
+                                        </td>
+                                    </tr>
+                                    <tr v-for="(goods,i) in detailOrder.orderDetails" :key="i">
+                                        <td>
+                                            <div class="typographic">
+                                                <img width="70px" height="70px" :src="goods.image" />
+                                                <span v-html="goods.title"></span>
+                                                <div>
+                                                    <span class="guige" v-html="convertOwnspec(goods.ownSpec)"></span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <ul class="unstyled">
+                                                    <li class="o-price" ></li>
+                                                    <li v-html="'￥'+formatPrice(goods.price)"></li>
+                                                </ul>
+                                        </td>
+                                        <td v-html="goods.num"></td>
+                                        <td>无优惠</td>
+                                        <td>交易成功</td>
+                                    </tr>
                                 </tbody>
                             </table>
+                            <div class="order-price">
+                                <p>商品总金额：<span v-html="'￥'+formatPrice(detailOrder.totalPay)"></span></p>
+                                <p>运费金额：，免费用</p>
+                                <p>使用优惠券：无</p>
+                                <h4 class="red">实际支付：<span v-html="'￥'+formatPrice(detailOrder.totalPay)"></span></h4>
                             </div>
+                            <div class="clearfix"></div>
                         </div>
-                        <div class="choose-order">
-                            <div class="sui-pagination pagination-large top-pages">
-                                <ul>
-                                    <li class="prev disabled">
-                                        <a @click="prevPage">«上一页</a>
-                                    </li>
-                                    <li :class="{active:index(i) === query.page}" v-for="i in Math.min(5,totalPage)" :key="i">
-                                        <a @click="query.page=index(i)">{{index(i)}}</a>
-                                    </li>
-                                    <li class="dotted" v-show="totalPage>5"><span>...</span></li>
-                                    <li :class="{next:true,disabled:query.page === totalPage}">
-                                        <a @click="nextPage">下一页»</a>
-                                    </li>
-                                </ul>
-                                <div>
-                                    <span>共{{totalPage}}页&nbsp;</span>
-                                    <span>
-                                        到第
-                                        <input type="text" class="page-num" ref="page">
-                                        页 <button class="page-confirm" @click="navPage">确定</button>
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="clearfix"></div>
                     </div>
 
                     <div class="like-title">
@@ -316,15 +415,103 @@
                 page:1,
                 rows:5
             },
+            orderList:"", //订单列表显示
+            orderDetail:"none",
+            detailOrder:[], //订单详情展示
+            orderStatus:[], //订单状态
+            stateData:[
+                "提交订单",
+                "付款成功",
+                "发货",
+                "确认收货",
+                "已评价"
+            ],
+            stateType:[
+                "createTime",
+                "paymentTime",
+                "consignTime",
+                "endTime",
+                "commentTime"
+            ],
+            orderState: [],
         },
         components:{
             lyTop:() => import('./js/pages/top.js')
         },
         created() {
             //加载数据
+            this.orderDetail = "none";
             this.loadOrder();
         },
         methods: {
+            stateTransition(i){
+
+            },
+            orderDetailsShow(orderId){
+                //初始化orderState
+                this.orderState=[];
+                this.orderDetail = '';
+                this.orderList = "none";
+                //查询订单信息
+                ly.http.get("/order/"+orderId).then(({data}) => {
+                    this.detailOrder = data;
+                    //查询订单详情
+                    ly.http.get("/order/status/"+orderId).then(({data}) => {
+                        this.orderStatus = data;
+                        //封装orderState
+                        for (let i = 1; i <= 5; i++){
+                            let temp = {
+                                stateClass: '',
+                                stateTime: '',
+                                stateDay: '',
+                                stateTitle: '',
+                            };
+                            temp.stateTitle = this.stateData[i-1];
+                            if (i === data.status){
+                                const t = this.formatDate(data[this.stateType[i-1]]).split(" ");
+                                temp.stateDay = t[0];
+                                temp.stateTime = t[1];
+                                temp.stateClass = "current";
+                                this.orderState.push(temp);
+                                continue ;
+                            }else if (i < data.status) {
+                                const t = this.formatDate(data[this.stateType[i-1]]).split(" ");
+                                temp.stateDay = t[0];
+                                temp.stateTime = t[1];
+                                if (i === 5){
+                                    temp.stateClass = "finished last";
+                                }else {
+                                    temp.stateClass = "finished";
+                                }
+                                this.orderState.push(temp);
+                                continue ;
+                            }else {
+                                if (i === 5) {
+                                    temp.stateClass = "todo last";
+                                }else{
+                                    temp.stateClass = "todo";
+                                }
+                                temp.stateDay = "";
+                                temp.stateTime = "";
+                                this.orderState.push(temp);
+                                continue ;
+                            }
+
+                        }
+                        console.log(JSON.stringify(this.orderState))
+
+                    })
+
+                });
+            },
+            convertOwnspec(ownSpec){
+                let result = "";
+                const temp = JSON.parse(ownSpec)
+                for (let key in temp){
+                    result += "  " + key + ":" + temp[key];
+                }
+                return result;
+            },
             payment(orderId,totalPay){
                 //付款
                 //1.修改订单状态

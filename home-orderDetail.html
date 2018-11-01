@@ -13,12 +13,6 @@
 </head>
 
 <body>
-    
-    <!--页面顶部白条条，由js动态加载-->
-	<script type="text/javascript" src="plugins/jquery/jquery.min.js"></script>
-	<div class="nav-bottom"></div>
-    <script type="text/javascript">$(".nav-bottom").load("top.html");</script>
-
 <script type="text/javascript" src="js/plugins/jquery/jquery.min.js"></script>
 <script type="text/javascript">
 $(function(){
@@ -40,12 +34,15 @@ $(function(){
 <script type="text/javascript" src="js/plugins/jquery-placeholder/jquery.placeholder.min.js"></script>
 <script type="text/javascript" src="js/widget/nav.js"></script>
 </body>
-    <!--header-->
-    <div id="account">
-        <div class="py-container">
-            <div class="yui3-g home">
-                <!--左侧列表-->
-                <div class="yui3-u-1-6 list">
+<!--header-->
+<div id="account">
+    <div id="nav-bottom">
+        <ly-top/>
+    </div>
+    <div class="py-container">
+        <div class="yui3-g home">
+            <!--左侧列表-->
+            <div class="yui3-u-1-6 list">
 
                     <div class="person-info">
                         <div class="person-photo"><img src="img/_/photo.png" alt=""></div>
@@ -231,71 +228,72 @@ $(function(){
                                         <div class="p-img">
                                             <img src="img/_/itemlike02.png" />
                                         </div>
-                                        <div class="attr">
-                                            <em>Apple苹果iPhone 6s/6s Plus 16G 64G 128G</em>
-                                        </div>
-                                        <div class="price">
-                                            <strong>
-											<em>¥</em>
-											<i>4388.00</i>
-										</strong>
-                                        </div>
-                                        <div class="commit">
-                                            <i class="command">已有700人评价</i>
-                                        </div>
-                                    </div>
-                                </li>
-                                <li class="yui3-u-1-4">
-                                    <div class="list-wrap">
-                                        <div class="p-img">
-                                            <img src="img/_/itemlike03.png" />
-                                        </div>
-                                        <div class="attr">
-                                            <em>DELL戴尔Ins 15MR-7528SS 15英寸 银色 笔记本</em>
-                                        </div>
-                                        <div class="price">
-                                            <strong>
-											<em>¥</em>
-											<i>4088.00</i>
-										</strong>
-                                        </div>
-                                        <div class="commit">
-                                            <i class="command">已有700人评价</i>
-                                        </div>
-                                    </div>
-                                </li>
-                                <li class="yui3-u-1-4">
-                                    <div class="list-wrap">
-                                        <div class="p-img">
-                                            <img src="img/_/itemlike04.png" />
-                                        </div>
-                                        <div class="attr">
-                                            <em>DELL戴尔Ins 15MR-7528SS 15英寸 银色 笔记本</em>
-                                        </div>
-                                        <div class="price">
-                                            <strong>
-											<em>¥</em>
-											<i>4088.00</i>
-										</strong>
-                                        </div>
-                                        <div class="commit">
-                                            <i class="command">已有700人评价</i>
-                                        </div>
-                                    </div>
-                                </li>
 
-                            </ul>
-                        </div>
+                        </ul>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-	<!-- 底部栏位 -->
-	<!--页面底部，由js动态加载-->
-	<div class="clearfix footer"></div>
-	<script type="text/javascript">$(".footer").load("foot.html");</script>
-	<!--页面底部END-->
+<!-- 底部栏位 -->
+<!--页面底部，由js动态加载-->
+<div class="clearfix footer"></div>
+<script type="text/javascript">$(".footer").load("foot.html");</script>
+<!--页面底部END-->
 
+<script src="./js/vue/vue.js"></script>
+<script src="./js/axios.min.js"></script>
+<script src="./js/common.js"></script>
+<script src="./js/plugins/jquery/jquery.cookie.js"></script>
+<script type="text/javascript">
+    var vm = new Vue({
+        el: "#account",
+        data: {
+            ly,
+        },
+        components:{
+            lyTop:() => import('./js/pages/top.js')
+        },
+        created() {
+            //加载数据
+            this.loadOrder();
+        },
+        methods: {
+            loadOrder(){
+                ly.verifyUser().then(resp => {
+                    // 查询用户信息
+                    this.user = resp.data;
+                    // 查询订单信息
+                    ly.http.get("/order/list?"+ ly.stringify(this.query)).then(({data:{items,total,totalPage}}) => {
+                        this.orders = items;
+                        this.total = total;
+                        this.totalPage = totalPage;
+                    }).catch(() => this.orders = [])
+
+                }).catch(() => {
+                    // 去登录
+                    this.gotoLogin();
+                });
+            },
+            formatDate:ly.formatDate,
+            formatPrice: ly.formatPrice,
+            getTotalPrice(order){
+                return order.orderDetails.map(d => d.num * d.price).reduce((v1,v2) => v1 + v2, 0);
+            },
+            logout() {
+                // 删除cookie中的token即可
+                Cookies.remove("LY_TOKEN",{
+                    path:"/",
+                    domain:"leyou.com"
+                });
+                window.location = 'http://www.leyou.com'
+            },
+            gotoLogin() {
+                window.location = "login.html?returnUrl=" + window.location;
+            }
+        },
+    });
+</script>
 </html>

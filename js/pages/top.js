@@ -1,7 +1,7 @@
 const lyTop = {
     template: "\
     <div class='nav-top'> \
-     <shortcut/>\
+     <shortcut />\
         <!--头部--> \
         <div class='header' id='headApp'> \
             <div class='py-container'> \

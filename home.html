@@ -14,12 +14,6 @@
 
 <body>
 
-<!-- 头部栏位 -->
-<!--页面顶部，由js动态加载-->
-<script type="text/javascript" src="plugins/jquery/jquery.min.js"></script>
-<div id="nav-bottom"></div>
-<script type="text/javascript">$("#nav-bottom").load("top.html");</script>
-
 <script type="text/javascript" src="js/plugins/jquery/jquery.min.js"></script>
 <script type="text/javascript">
     $(function () {
@@ -43,6 +37,9 @@
 </body>
 <!--header-->
 <div id="account">
+    <div id="nav-bottom">
+        <ly-top/>
+    </div>
     <div class="py-container">
         <div class="yui3-g home">
             <!--左侧列表-->
@@ -175,18 +172,25 @@
                         <div class="choose-order">
                             <div class="sui-pagination pagination-large top-pages">
                                 <ul>
-                                    <li class="prev disabled"><a href="#">«上一页</a></li>
-                                    <li class="active"><a href="#">1</a></li>
-                                    <li><a href="#">2</a></li>
-                                    <li><a href="#">3</a></li>
-                                    <li class="dotted"><span>...</span></li>
-                                    <li class="next"><a href="#">下一页»</a></li>
+                                    <li class="prev disabled">
+                                        <a @click="prevPage">«上一页</a>
+                                    </li>
+                                    <li :class="{active:index(i) === query.page}" v-for="i in Math.min(5,totalPage)" :key="i">
+                                        <a @click="query.page=index(i)">{{index(i)}}</a>
+                                    </li>
+                                    <li class="dotted" v-show="totalPage>5"><span>...</span></li>
+                                    <li :class="{next:true,disabled:query.page === totalPage}">
+                                        <a @click="nextPage">下一页»</a>
+                                    </li>
                                 </ul>
-                                <div><span>共10页&nbsp;</span><span>
-                                            到
-                                            <input type="text" class="page-num"><button class="page-confirm"
-                                                                                        onclick="alert(1)">确定</button>
-                                            页</span></div>
+                                <div>
+                                    <span>共{{totalPage}}页&nbsp;</span>
+                                    <span>
+                                        到第
+                                        <input type="text" class="page-num" ref="page">
+                                        页 <button class="page-confirm" @click="navPage">确定</button>
+                                    </span>
+                                </div>
                             </div>
                         </div>
 
@@ -301,32 +305,47 @@
         data: {
             user: {},
             orders:[],
+            total: 0, //总条数
+            totalPage: 0,//总页数
             query:{
                 status:0,
                 page:1,
                 rows:5
-            }
+            },
+        },
+        components:{
+            lyTop:() => import('./js/pages/top.js')
         },
         created() {
-            const token = Cookies.get("LY_TOKEN");
-            if (token) {
-                // 有token，曾经登录过，查询用户信息
-                leyou.http.get("/user/" + token)
-                    .then(resp => {
-                        this.user = resp.data;
-                        // 查询订单信息
-                        this.loadOrder();
-                    })
-                    .catch(() => {
-                        // 去登录
-                        this.gotoLogin();
-                    });
-            } else {
-                // 去登录
-                this.gotoLogin();
-            }
+            //加载数据
+            this.loadOrder();
         },
         methods: {
+            navPage(){
+                this.query.page = this.$refs.page.value ;
+            },
+            index(i){
+                if(this.query.page <= 3 || this.totalPage <= 5){
+                    // 如果当前页小于等于3或者总页数小于等于5
+                    return i;
+                }else if (this.query.page > this.totalPage - 3) {
+                    //当前页码大于totalPage-3，应该从totalPage-5开始
+                    return this.totalPage - 5 + i;
+                } else if(this.query.page > 3) {
+                    // 如果当前页大于3，应该从page-3开始
+                    return this.query.page - 3 + i;
+                }
+            },
+            prevPage(){
+                if(this.query.page > 1){
+                    this.query.page--
+                }
+            },
+            nextPage(){
+                if(this.query.page < this.totalPage){
+                    this.query.page++
+                }
+            },
             logout() {
                 // 删除cookie中的token即可
                 Cookies.remove("LY_TOKEN",{
@@ -339,11 +358,20 @@
                 window.location = "login.html?returnUrl=" + window.location;
             },
             loadOrder(){
-                // 查询订单信息
-                ly.http.get("/order/list?"+ ly.stringify(this.query))
-                    .then(({data:{items,total}}) => {
-                        this.orders = items;
-                    }).catch(() => this.orders = [])
+                ly.verifyUser().then(resp => {
+                    // 查询用户信息
+                    this.user = resp.data;
+                    // 查询订单信息
+                    ly.http.get("/order/list?"+ ly.stringify(this.query)).then(({data:{items,total,totalPage}}) => {
+                            this.orders = items;
+                            this.total = total;
+                            this.totalPage = totalPage;
+                        }).catch(() => this.orders = [])
+
+                }).catch(() => {
+                    // 去登录
+                    this.gotoLogin();
+                });
             },
             formatDate:ly.formatDate,
             formatPrice: ly.formatPrice,

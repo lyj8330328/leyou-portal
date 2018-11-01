@@ -430,7 +430,6 @@
         methods:{
             loadData(){
                 ly.http.post("/search/page",this.search).then((resp) => {
-                    console.log(resp)
                     resp.data.items.forEach(goods => {
                         let max = 0;
                         let min = 0;

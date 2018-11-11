@@ -339,6 +339,9 @@
                     })
                 },
                 loadData(){
+                    ly.http.get("address").then(({data}) => {
+                        console.log(data)
+                    })
 					ly.verifyUser().then(() => {
 					    //1.已经登录，获取购物车中要下单的信息
 						this.carts = ly.store.get("selectedCarts") || [];
@@ -391,21 +394,26 @@
                         const {discount, ...rest} = this.order;
                         //4.提交订单
                         ly.http.post("/order",rest,{
-                            transformResponse:[
-                                //对响应进行处理的回调
-                                function (data) {
-                                    //不对data做任何处理，直接返回
-                                    return data;
-                                }
-                            ]
-                        }).then(({data}) => {
-                            //4.1在线支付，需要到付款页
-                            window.location = "pay.html";
-                            //4.2 添加总金额和订单号到本地数据
-                            ly.store.set("totalPay",this.actualPay);
-                            ly.store.set("orderId",data);
-                        }).catch(() => {
-                            alert("订单提交失败，请稍后再试！");
+                            // transformResponse:[
+                            //     //对响应进行处理的回调
+                            //     function (data) {
+                            //         //不对data做任何处理，直接返回
+                            //         return data;
+                            //     }
+                            // ]
+                        }).then((resp) => {
+                            if (resp.status === 200) {
+                                //商品库存不足
+                                alert("商品库存不足！")
+                            }else {
+                                //4.1在线支付，需要到付款页
+                                window.location = "pay.html";
+                                //4.2 添加总金额和订单号到本地数据
+                                ly.store.set("totalPay",this.actualPay);
+                                ly.store.set("orderId",resp.data[0]);
+                            }
+                        }).catch(({data}) => {
+                            console.log(data);
                         })
                     }).catch(() => {
                         //未登录，重定向到登录页面

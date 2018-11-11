@@ -459,50 +459,52 @@
                     ly.http.get("/order/status/"+orderId).then(({data}) => {
                         this.orderStatus = data;
                         //封装orderState
-                        for (let i = 1; i <= 5; i++){
-                            let temp = {
-                                stateClass: '',
-                                stateTime: '',
-                                stateDay: '',
-                                stateTitle: '',
-                            };
-                            temp.stateTitle = this.stateData[i-1];
-                            if (i === data.status){
-                                const t = this.formatDate(data[this.stateType[i-1]]).split(" ");
-                                temp.stateDay = t[0];
-                                temp.stateTime = t[1];
-                                temp.stateClass = "current";
-                                this.orderState.push(temp);
-                                continue ;
-                            }else if (i < data.status) {
-                                const t = this.formatDate(data[this.stateType[i-1]]).split(" ");
-                                temp.stateDay = t[0];
-                                temp.stateTime = t[1];
-                                if (i === 5){
-                                    temp.stateClass = "finished last";
-                                }else {
-                                    temp.stateClass = "finished";
-                                }
-                                this.orderState.push(temp);
-                                continue ;
-                            }else {
-                                if (i === 5) {
-                                    temp.stateClass = "todo last";
-                                }else{
-                                    temp.stateClass = "todo";
-                                }
-                                temp.stateDay = "";
-                                temp.stateTime = "";
-                                this.orderState.push(temp);
-                                continue ;
-                            }
-
-                        }
-                        console.log(JSON.stringify(this.orderState))
+                        this.createOrderState(data);
 
                     })
 
                 });
+            },
+            createOrderState(data){
+                for (let i = 1; i <= 5; i++){
+                    let temp = {
+                        stateClass: '',
+                        stateTime: '',
+                        stateDay: '',
+                        stateTitle: '',
+                    };
+                    temp.stateTitle = this.stateData[i-1];
+                    if (i === data.status){
+                        const t = this.formatDate(data[this.stateType[i-1]]).split(" ");
+                        temp.stateDay = t[0];
+                        temp.stateTime = t[1];
+                        temp.stateClass = "current";
+                        this.orderState.push(temp);
+                        continue ;
+                    }else if (i < data.status) {
+                        const t = this.formatDate(data[this.stateType[i-1]]).split(" ");
+                        temp.stateDay = t[0];
+                        temp.stateTime = t[1];
+                        if (i === 5){
+                            temp.stateClass = "finished last";
+                        }else {
+                            temp.stateClass = "finished";
+                        }
+                        this.orderState.push(temp);
+                        continue ;
+                    }else {
+                        if (i === 5) {
+                            temp.stateClass = "todo last";
+                        }else{
+                            temp.stateClass = "todo";
+                        }
+                        temp.stateDay = "";
+                        temp.stateTime = "";
+                        this.orderState.push(temp);
+                        continue ;
+                    }
+
+                }
             },
             convertOwnspec(ownSpec){
                 let result = "";

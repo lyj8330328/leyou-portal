@@ -159,7 +159,10 @@
         created() {
             this.$validator.extend('useful', {
                 getMessage(field, args, data) {
-                    return args[0] === '1' ? '用户名' + data : '手机' + data;
+                    console.log(field)
+                    console.log(args)
+                    console.log(data)
+                    return field + data;
                 },
                 validate(value, args) {
                     return new Promise(resolve => {
@@ -197,13 +200,17 @@
                         // 校验通过，提交表单
                         leyou.http.post("/user/register", leyou.stringify(this.user))
                             .then(resp => {
+                                console.log(resp);
                                 if (resp.status === 201) {
                                     // 注册成功
                                     alert("注册成功,即将跳转到登录页！");
                                     setTimeout(() => window.location = '/login.html', 2000);
                                 }
                             })
-                            .catch(() => alert("注册失败！"))
+                            .catch(({errors}) => {
+                                console.log(errors);
+                                alert("注册失败！")
+                            })
                     }
                 })
             }
